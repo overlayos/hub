@@ -48,6 +48,12 @@ func Connect(opts HubOpts) (hubconn *HubConn, err error) {
 	}, nil
 }
 
+func (s *HubConn) RTT() (rtt uint64, err error) {
+
+	dur, err := s.qconn.RTT()
+	return uint64(dur.Nanoseconds()), err
+}
+
 func (s *HubConn) Send(subj string, msg []byte) (err error) {
 
 	return s.qconn.Publish(subj, msg)
