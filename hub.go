@@ -63,7 +63,7 @@ func (s *HubConn) Send(subj string, msg []byte) (err error) {
 
 func (s *HubConn) Query(subj string, msg []byte, timeout int) (resp string, err error) {
 
-	respmsg, err := s.qconn.Request(subj, nil, time.Duration(timeout)*time.Second)
+	respmsg, err := s.qconn.Request(subj, msg, time.Duration(timeout)*time.Second)
 	if err != nil {
 		return "", err
 	}
