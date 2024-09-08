@@ -1,7 +1,6 @@
 package hub
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,6 +29,8 @@ type HubConn struct {
 }
 
 type HubReq *nats.Msg
+type ReceiveHandler func(string, []byte)
+type RequestHandler func(string, []byte) []byte
 
 func Connect(opts HubOpts) (hubconn *HubConn, err error) {
 
@@ -62,7 +63,7 @@ func (s *HubConn) Send(subj string, msg []byte) (err error) {
 	return s.qconn.Publish(subj, msg)
 }
 
-func (s *HubConn) Query(subj string, msg []byte, timeout int) (resp string, err error) {
+func (s *HubConn) Request(subj string, msg []byte, timeout int) (resp string, err error) {
 
 	respmsg, err := s.qconn.Request(subj, msg, time.Duration(timeout)*time.Second)
 	if err != nil {
@@ -74,30 +75,19 @@ func (s *HubConn) Query(subj string, msg []byte, timeout int) (resp string, err 
 	return resp, nil
 }
 
-func (s *HubConn) OnReceived(subj string, handler func(string, []byte)) {
+func (s *HubConn) OnReceived(subj string, handler ReceiveHandler) {
 
 	s.qconn.QueueSubscribe(subj, s.group, func(msg *nats.Msg) {
 		handler(msg.Subject, msg.Data)
 	})
 }
 
-func (s *HubConn) OnRequested(subj string, handler func(string, []byte) []byte) error {
+func (s *HubConn) OnRequested(subj string, handler RequestHandler) error {
 
-	subs, err := s.qconn.SubscribeSync(subj)
-	if err != nil {
-		return err
-	}
-
-	for {
-		msg, err := subs.NextMsg(10 * time.Second)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
+	s.qconn.Subscribe(subj, func(msg *nats.Msg) {
 		resp := handler(msg.Subject, msg.Data)
-
 		msg.Respond(resp)
-	}
+	})
 
 	return nil
 }

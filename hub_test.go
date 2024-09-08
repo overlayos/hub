@@ -49,7 +49,7 @@ func TestOnRequested(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	resp, err := conn.Query("testing", []byte("testing"), 1)
+	resp, err := conn.Request("testing", []byte("testing"), 1)
 	if err != nil {
 		t.Error(err)
 	}
