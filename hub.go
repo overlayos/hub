@@ -28,6 +28,8 @@ type HubConn struct {
 	group    string
 }
 
+type HubReq *nats.Msg
+
 func Connect(opts HubOpts) (hubconn *HubConn, err error) {
 
 	natsOpts := NatsOpts()
@@ -75,6 +77,13 @@ func (s *HubConn) OnReceived(subj string, handler func(string, []byte)) {
 
 	s.qconn.QueueSubscribe(subj, s.group, func(msg *nats.Msg) {
 		handler(msg.Subject, msg.Data)
+	})
+}
+
+func (s *HubConn) OnRequested(subj string, handler func(HubReq, string, []byte)) {
+
+	s.qconn.QueueSubscribe(subj, s.group, func(msg *nats.Msg) {
+		handler(msg, msg.Subject, msg.Data)
 	})
 }
 
