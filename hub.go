@@ -59,6 +59,18 @@ func (s *HubConn) Send(subj string, msg []byte) (err error) {
 	return s.qconn.Publish(subj, msg)
 }
 
+func (s *HubConn) Query(subj string, msg []byte, timeout int) (resp string, err error) {
+
+	respmsg, err := s.qconn.Request(subj, nil, time.Duration(timeout)*time.Second)
+	if err != nil {
+		return "", err
+	}
+
+	resp = string(respmsg.Data)
+
+	return resp, nil
+}
+
 func (s *HubConn) OnReceived(subj string, handler func(string, []byte)) {
 
 	s.qconn.QueueSubscribe(subj, s.group, func(msg *nats.Msg) {
