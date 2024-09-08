@@ -1,6 +1,7 @@
 package hub
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -80,11 +81,25 @@ func (s *HubConn) OnReceived(subj string, handler func(string, []byte)) {
 	})
 }
 
-func (s *HubConn) OnRequested(subj string, handler func(HubReq, string, []byte)) {
+func (s *HubConn) OnRequested(subj string, handler func(string, []byte) []byte) error {
 
-	s.qconn.QueueSubscribe(subj, s.group, func(msg *nats.Msg) {
-		handler(msg, msg.Subject, msg.Data)
-	})
+	subs, err := s.qconn.SubscribeSync(subj)
+	if err != nil {
+		return err
+	}
+
+	for {
+		msg, err := subs.NextMsg(10 * time.Second)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		resp := handler(msg.Subject, msg.Data)
+
+		msg.Respond(resp)
+	}
+
+	return nil
 }
 
 func (s *HubConn) Close() (err error) {
