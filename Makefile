@@ -37,7 +37,7 @@ _envinit:
 	-go env -w GOPRIVATE=github.com/overlayos
 	-go env -w GONOSUMDB=github.com/overlayos
 	-go install honnef.co/go/tools/cmd/staticcheck@2023.1.7
-	-go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
+	-go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@v0.24.0
 
 _gitconfiginit:
 	-git config pull.rebase true
